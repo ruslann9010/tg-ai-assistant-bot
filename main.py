@@ -5,6 +5,7 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from dotenv import load_dotenv  # Импортируем библиотеку для чтения .env
+from handlers import router
 
 # Включаем логирование, чтобы видеть запуск бота в терминале
 logging.basicConfig(level=logging.INFO)
@@ -25,9 +26,10 @@ dp = Dispatcher()
 
 
 async def main():
+
     # Наше информационное сообщение
     print("\n🚀 Бот успешно запущен и готов к работе!")
-    # Запуск прослушивания серверов Telegram
+    dp.include_router(router)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
