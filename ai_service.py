@@ -1,31 +1,41 @@
+import os
+from dotenv import load_dotenv
+from gigachat import GigaChat
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 class AIService:
     """Class responsible for interacting with the AI API (e.g., OpenAI,
     GigaChat, or Ollama).
     """
 
-
     def __init__(self) -> None:
-        """Initialize the AI client and load required API keys/configurations
+        credentials = os.getenv("GIGACHAT_CREDENTIALS") 
+        # 2. Инициализируем официальный клиент GigaChat
+        # Передаем ключ и отключаем проверку сертификатов Минцифры (verify_ssl_certs=False)
+        # чтобы бот не выдавал ошибок на Windows без установленных сертификатов.
+        self.client = GigaChat(
+            credentials=credentials,
+            model="GigaChat-3-Ultra",  # Попробуйте указать этот идентификатор
+            verify_ssl_certs=False,
+            scope="GIGACHAT_API_PERS"
+        )
 
-        from environment variables.
-        """
-        # TODO: 1. Получите API-ключ для ИИ из переменных окружения через os.getenv()
-        # TODO: 2. Инициализируйте здесь клиент нейросети (когда выберем модель)
-        pass
+
 
 
 
     async def get_response(self, user_text: str) -> str:
-        """Sends user text to the AI model and retrieves the generated
+        """Sends user text to GigaChat and returns the AI response.
 
-        response.
-
-        :param user_text: The message sent by the user in Telegram.
-        :return: The textual response from the AI.
+        :param user_text: The message from Telegram user.
+        :return: Generated text response from GigaChat.
         """
-         # Подсказка: этот метод ОБЯЗАТЕЛЬНО должен быть асинхронным (async),
-        # так как запрос к ИИ через интернет занимает время, и бот не должен зависать.
-
-        # TODO: 3. Напишите здесь временный возврат (return) строки-заглушки,
-        # чтобы проверить, что метод вызывается (например, "Тест ИИ: " + user_text)
-        return f"Тест ИИ: " + user_text
+        # С помощью конструкции 'with' клиент автоматически управляет сессией.
+        # Используем асинхронный метод self.client.achat()
+        with self.client as giga:
+            response = await giga.achat(user_text)   
+            # Извлекаем чистый текст ответа из структуры данных Сбера
+            return response.choices[0].message.content
