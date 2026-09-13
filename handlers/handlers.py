@@ -1,10 +1,9 @@
-from ai_service import AIService
+from ai_service.ai_service import AIService
 from aiogram import Router, types
 from aiogram.filters import CommandStart
 
 
 router = Router()
-aiservice = AIService()
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -17,7 +16,7 @@ async def cmd_start(message: types.Message):
 
 
 @router.message()
-async def handle_user_message(message: types.Message):
+async def handle_user_message(message: types.Message , aiservice: AIService):
     """Captures any text message from the user and processes it via
 
     AIService.
