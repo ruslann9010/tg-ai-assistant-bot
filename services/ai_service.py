@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from gigachat import GigaChat
 from dotenv import load_dotenv
+from gigachat.models import Chat, Messages
 
 
 load_dotenv()
@@ -20,14 +21,21 @@ class AIService:
             scope="GIGACHAT_API_PERS"
         )
 
-    async def get_response(self, user_text: str) -> str:
+    async def get_response(self, messages: list) -> str:
         """Sends user text to GigaChat and returns the AI response.
 
         :param user_text: The message from Telegram user.
         :return: Generated text response from GigaChat.
         """
-     
-        with self.client as giga:
-            response = await giga.achat(user_text)   
-            return response.choices[0].message.content
-        
+
+        formatted_messages = []
+        for msg in messages:
+            formatted_messages.append(
+                Messages(role=msg['role'], content=msg['content'])
+            )
+        payload = Chat(
+            messages=formatted_messages,
+            model="GigaChat-3-Ultra" 
+        )
+        response = await self.client.achat(payload)
+        return response.choices[0].message.content
