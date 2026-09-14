@@ -1,6 +1,8 @@
-from ai_service.ai_service import AIService
+from services.ai_service import AIService
 from aiogram import Router, types
 from aiogram.filters import CommandStart
+from aiogram.utils.chat_action import ChatActionSender
+from aiogram.enums import ChatAction
 
 
 router = Router()
@@ -16,11 +18,13 @@ async def cmd_start(message: types.Message):
 
 
 @router.message()
-async def handle_user_message(message: types.Message , aiservice: AIService):
+async def handle_user_message(message: types.Message, ai_service: AIService):
     """Captures any text message from the user and processes it via
 
     AIService.
     """
+
     if not message.text: return
-    ai_response = await aiservice.get_response(message.text)
+    async with ChatActionSender(bot=message.bot, chat_id=message.chat.id, action=ChatAction.TYPING): # type: ignore
+        ai_response = await ai_service.get_response(message.text)
     await message.answer(ai_response)

@@ -6,7 +6,6 @@ from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv 
 from handlers.handlers import router
 from aiogram.client.session.aiohttp import AiohttpSession 
-
 from services.ai_service import AIService
 
 
