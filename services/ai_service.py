@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from gigachat import GigaChat
-from dotenv import load_dotenv
 from gigachat.models import Chat, Messages
 
 

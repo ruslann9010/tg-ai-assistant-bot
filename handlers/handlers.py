@@ -1,20 +1,26 @@
-from services.ai_service import AIService
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
+
+
 from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.enums import ChatAction
+from services.ai_service import AIService
 
 
 router = Router()
 
 @router.message(CommandStart())
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message, **kwargs):
     """Handles the /start command.
 
     Greets the user safely.
     """
+    reply_markup = get_ai_buttons()
     user_name = message.from_user.first_name if message.from_user else "polzovatel"
-    await message.answer(f"Привет, {user_name}! Бот успешно запущен!")
+    await message.answer(f"Привет, {user_name}! Бот успешно запущен!",
+                        reply_markup=reply_markup)
 
 
 
@@ -59,4 +65,20 @@ async def handle_user_message(message: types.Message, ai_service: AIService, db_
 
 
 
+def get_ai_buttons():
+    builder = InlineKeyboardBuilder()
+    builder.add(
+        InlineKeyboardButton(text="Start", callback_data="press_start" )
+    )
+    return builder.as_markup()
+
+
+@router.callback_query(lambda c: c.data == "press_start")
+async def process_press_start(callback: types.CallbackQuery, ai_service: AIService, db_service):
+    await callback.answer()
+    content = [{ "role": "user", "content": "Поздоровайся с пользователем Telegram-бота и напиши оригинальное приветствие."}]  
+    response = await ai_service.get_response(content)
+    assert callback.message is not None
+    await callback.message.answer(text=response)
+    await db_service.save_message(user_id=callback.from_user.id, role="assistant", content=response)
 

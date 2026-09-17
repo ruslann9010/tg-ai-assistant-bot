@@ -1,8 +1,7 @@
+database.db
+*.slnx
 .env
 venv/
-.vs/
-.mypy_cache/
+.venv/
 __pycache__/
-*.pyc
-*.pyproj
-*.slnx
+.vs/
