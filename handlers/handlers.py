@@ -1,7 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
 
-
 from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
 from aiogram.utils.chat_action import ChatActionSender

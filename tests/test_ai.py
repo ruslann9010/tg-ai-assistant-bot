@@ -22,7 +22,7 @@ class TestAiService:
         Verifies that get_response correctly parses and returns the text 
         received from the GigaChat API structure.
         """
-
+        
         mock_response = AsyncMock()
         mock_message_object = AsyncMock()
         mock_message_object.message.content = "Ответ получен всё хорошо!"
