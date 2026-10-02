@@ -14,16 +14,16 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
-API_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 PROXY_URL = os.getenv("TELEGRAM_PROXY_URL")
 
-if not API_TOKEN:
+if not BOT_TOKEN:
     sys.exit("Ошибка: Токен бота не найден! Проверьте файл .env")
 
 async def main():
 
     session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
-    bot = Bot(token=API_TOKEN, session=session) # type: ignore
+    bot = Bot(token=BOT_TOKEN, session=session) # type: ignore
     dp = Dispatcher()
 
     ai_service = AIService()

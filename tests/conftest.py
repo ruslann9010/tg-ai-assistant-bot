@@ -12,6 +12,14 @@ sys.path.append(str(BASE_DIR))
 from services.database_db import DatabaseService
 
 
+@pytest.fixture(autouse=True)
+def clean_main_import():
+    if "main" in sys.modules:
+        del sys.modules["main"]
+    yield
+    if "main" in sys.modules:
+        del sys.modules["main"]
+
 @pytest.fixture
 def mock_handlers_service():
     mock_user = MagicMock(spec=User, id=12345, first_name="new_user")
@@ -19,11 +27,6 @@ def mock_handlers_service():
     mock_message.from_user = mock_user
     mock_message.answer = AsyncMock()
     return mock_message
-
-@pytest.fixture(scope="session")
-def event_loop_policy():
-    import asyncio
-    return asyncio.get_event_loop_policy()
 
 @pytest.fixture
 def mock_db_service():

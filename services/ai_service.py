@@ -13,6 +13,8 @@ class AIService:
 
     def __init__(self) -> None:
         credentials = os.getenv("GIGACHAT_CREDENTIALS") 
+        if not credentials:
+            raise ValueError("Переменная окружения GIGACHAT_CREDENTIALS не задана или пуста!")
         self.client = GigaChat(
             credentials=credentials,
             model="GigaChat-3-Ultra",  

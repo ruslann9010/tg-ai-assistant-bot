@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from unittest.mock import AsyncMock, MagicMock, patch  
-from handlers.handlers import cmd_clear, cmd_start, handle_user_message
+from handlers.handlers import cmd_clear, handle_user_message
 
 
 class TestHandlers:
