@@ -9,7 +9,7 @@ load_dotenv()
 class AIService:
     """Class responsible for interacting with the AI API (e.g., OpenAI,
     GigaChat, or Ollama).
-    """
+    """  
 
     def __init__(self) -> None:
         credentials = os.getenv("GIGACHAT_CREDENTIALS") 
@@ -20,7 +20,11 @@ class AIService:
             model="GigaChat-3-Ultra",  
             verify_ssl_certs=False,
             scope="GIGACHAT_API_PERS"
-        )
+        )   
+
+    async def check_auth(self):
+        await self.client.aget_models()
+
 
     async def get_response(self, messages: list) -> str:
         """Sends user text to GigaChat and returns the AI response.

@@ -10,6 +10,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.exceptions import TelegramUnauthorizedError
 from services.ai_service import AIService
 from services import database_db as db_module
+from gigachat.exceptions import BadRequestError
 
 
 logging.basicConfig(level=logging.INFO)
@@ -46,10 +47,14 @@ async def main():
         print(f"\n🚀 Бот @{bot_info.username} успешно авторизован и готов к работе!")
         dp = Dispatcher()
         ai_service = AIService()
+        await ai_service.check_auth()
         db_service = db_module.DatabaseService()
         await db_service.init_db()  
         dp.include_router(router)
         await dp.start_polling(bot, ai_service=ai_service, db_service=db_service)
+    except BadRequestError:
+        print(f"❌ Ошибка авторизации GigaChat API: Неверный GIGACHAT_CREDENTIALS!") 
+        return   
     except ValueError as e: 
         print(f"❌ Ошибка валидации токена: {e}")        
     except TelegramUnauthorizedError:  
