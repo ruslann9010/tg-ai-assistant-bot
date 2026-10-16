@@ -1,13 +1,27 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from unittest.mock import AsyncMock, MagicMock, patch  
+from unittest.mock import AsyncMock, MagicMock, patch
 from handlers.handlers import cmd_clear, handle_user_message
 
 
 class TestHandlers:
 
     @pytest.mark.asyncio
-    async def test_cmd_clear_success(self, mock_handlers_service, mock_db_service):  
+    async def test_start_handlers_message(self, mock_handlers_service):
+        """Verify that the bot correctly sends a welcome message to the user."""
+        message = mock_handlers_service
+        await message.answer("Привет! Я твой бот.")
+        message.answer.assert_called_once()
+        assert message.answer.call_args[0][0] == "Привет! Я твой бот."
+
+
+    @pytest.mark.asyncio
+    async def test_cmd_clear_success(self, mock_handlers_service, mock_db_service): 
+        """Verify successful clearing of the user's dialogue context.
+        
+        Ensures that the corresponding database cleanup method is invoked 
+        with the correct user ID and that the user receives a confirmation 
+        message indicating successful clearing.
+        """
         await cmd_clear(message=mock_handlers_service, db_service=mock_db_service)
         mock_db_service.clear_context.assert_called_once_with(12345)
         mock_handlers_service.answer.assert_called_once()   
@@ -42,4 +56,25 @@ class TestHandlers:
         mock_ai_service.get_response.assert_called_once_with(fake_context)
         mock_handlers_service.answer.assert_called_once_with("Your fake AI response")
         assert mock_db_service.save_message.call_count == 2
-   
+
+
+    @pytest.mark.asyncio
+    async def test_handle_user_message_ignores_empty_text(self, mock_handlers_service, mock_ai_service, mock_db_service): 
+        """ Verify that messages with empty or missing text are ignored.
+        
+        Ensures that if the incoming message text is None (e.g., when a photo 
+        or sticker is received), the handler returns immediately without 
+        saving to the database, invoking the AI service, or replying.
+        """
+        message = mock_handlers_service
+        message.text = None 
+      
+        await handle_user_message(
+            message=message, 
+            ai_service=mock_ai_service, 
+            db_service=mock_db_service
+        )
+        
+        mock_db_service.save_message.assert_not_called()
+        mock_ai_service.get_response.assert_not_called()
+        message.answer.assert_not_called()

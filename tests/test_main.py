@@ -14,9 +14,6 @@ def test_main_with_valid_token():
 
 def test_main_missing_token_exits():
      with patch("os.getenv", return_value=None):
-        breakpoint() 
         with pytest.raises(SystemExit) as exc_info:
-            breakpoint() 
             import main
-            breakpoint() 
         assert "Токен" in str(exc_info.value) or "токен" in str(exc_info.value).lower()
