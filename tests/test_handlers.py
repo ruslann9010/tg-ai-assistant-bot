@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from handlers.handlers import cmd_clear, handle_user_message
+from handlers.handlers import cmd_clear, handle_user_message, get_ai_buttons, process_press_start
+
+from aiogram.types import InlineKeyboardMarkup
 
 
 class TestHandlers:
@@ -78,3 +80,67 @@ class TestHandlers:
         mock_db_service.save_message.assert_not_called()
         mock_ai_service.get_response.assert_not_called()
         message.answer.assert_not_called()
+
+
+
+    @pytest.mark.asyncio
+    async def test_process_press_start_success(self, mock_ai_service, mock_db_service):
+        """
+        Verify that pressing the 'press_start' inline button correctly 
+        triggers the AI response generation and saves the message to the database.
+        """
+        # --- 1. Инициализация (Arrange) ---
+        # Создаем мок для CallbackQuery
+        callback = AsyncMock()
+        callback.from_user.id = 12345
+        
+        # Настраиваем фейковый ответ от ИИ
+        mock_ai_service.get_response.return_value = "Hello! Welcome to our awesome bot."
+
+        # --- 2. Действие (Act) ---
+        # Вызываем ваш хэндлер со скриншота, передавая все моки
+        await process_press_start(
+            callback=callback, 
+            ai_service=mock_ai_service, 
+            db_service=mock_db_service
+        )
+
+        # --- 3. Проверки (Assert) ---
+        # Проверяем, что бот убрал анимацию загрузки с кнопки
+        callback.answer.assert_called_once()
+
+        # Проверяем, что в ИИ ушел нужный запрос на приветствие
+        mock_ai_service.get_response.assert_called_once()
+
+        # Проверяем, что ответ ИИ был отправлен пользователю в чат
+        callback.message.answer.assert_called_once_with(text="Hello! Welcome to our awesome bot.")
+
+        # Проверяем, что сообщение зафиксировано в истории БД
+        mock_db_service.save_message.assert_called_once_with(
+            user_id=12345, 
+            role="assistant", 
+            content="Hello! Welcome to our awesome bot."
+        )
+
+
+
+    def test_get_ai_buttons_structure(self):
+        """ Verify that get_ai_buttons returns a valid inline keyboard with correct buttons.
+        
+        This test checks:
+        1. The returning object type.
+        2. The exact text on each button.
+        3. The correct callback_data attached to each button.
+        """
+        keyboard = get_ai_buttons()
+        assert isinstance(keyboard, InlineKeyboardMarkup), "Should return InlineKeyboardMarkup object"
+
+        buttons = []
+        for row in keyboard.inline_keyboard:
+            for button in row:
+                buttons.append(button)
+        assert len(buttons) == 1, f"Expected 1 buttons, but got {len(buttons)}"
+
+        first_button = buttons[0]
+        assert first_button.text == "Start", "Button text is incorrect"
+        assert first_button.callback_data == "press_start", "Button callback_data mismatch"
