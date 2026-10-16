@@ -85,37 +85,21 @@ class TestHandlers:
 
     @pytest.mark.asyncio
     async def test_process_press_start_success(self, mock_ai_service, mock_db_service):
-        """
-        Verify that pressing the 'press_start' inline button correctly 
+        """ Verify that pressing the 'press_start' inline button correctly 
         triggers the AI response generation and saves the message to the database.
         """
-        # --- 1. Инициализация (Arrange) ---
-        # Создаем мок для CallbackQuery
         callback = AsyncMock()
         callback.from_user.id = 12345
         
-        # Настраиваем фейковый ответ от ИИ
         mock_ai_service.get_response.return_value = "Hello! Welcome to our awesome bot."
-
-        # --- 2. Действие (Act) ---
-        # Вызываем ваш хэндлер со скриншота, передавая все моки
         await process_press_start(
             callback=callback, 
             ai_service=mock_ai_service, 
             db_service=mock_db_service
         )
-
-        # --- 3. Проверки (Assert) ---
-        # Проверяем, что бот убрал анимацию загрузки с кнопки
         callback.answer.assert_called_once()
-
-        # Проверяем, что в ИИ ушел нужный запрос на приветствие
         mock_ai_service.get_response.assert_called_once()
-
-        # Проверяем, что ответ ИИ был отправлен пользователю в чат
         callback.message.answer.assert_called_once_with(text="Hello! Welcome to our awesome bot.")
-
-        # Проверяем, что сообщение зафиксировано в истории БД
         mock_db_service.save_message.assert_called_once_with(
             user_id=12345, 
             role="assistant", 
