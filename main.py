@@ -13,16 +13,21 @@ from services import database_db as db_module
 from gigachat.exceptions import BadRequestError
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, 
+            format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", 
+            handlers=[logging.StreamHandler(sys.stdout), 
+            logging.FileHandler("bot.log", encoding="utf-8")] )
+
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
-
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 PROXY_URL = os.getenv("TELEGRAM_PROXY_URL")
 
 if not BOT_TOKEN:
-    sys.exit("Ошибка: Токен бота не найден! Проверьте файл .env")
-
+    logger.critical("Ошибка: Токен бота не найден! Проверьте файл .env")
+    sys.exit()
 
 async def check_proxy(proxy_url: str) -> bool:
     try:
@@ -38,13 +43,14 @@ async def main():
     if PROXY_URL:
         is_valid = await check_proxy(PROXY_URL)
         if not is_valid:
-            sys.exit(f"❌ Ошибка: Указанный PROXY_URL ({PROXY_URL}) не работает или недоступен!")
-        print("✅ Прокси успешно проверен и работает.")
+            logger.critical(f"❌ Ошибка: Не валидный PROXY ({PROXY_URL}) просрочен или недоступен!")
+            sys.exit()
+        logger.info("✅ Прокси проверен, работает.")
     try:
         session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
         bot = Bot(token=BOT_TOKEN, session=session) # type: ignore
         bot_info = await bot.get_me()
-        print(f"\n🚀 Бот @{bot_info.username} успешно авторизован и готов к работе!")
+        logger.info(f"\n🚀 Бот @{bot_info.username} авторизован, готов к работе!")
         dp = Dispatcher()
         ai_service = AIService()
         await ai_service.check_auth()
@@ -52,16 +58,14 @@ async def main():
         await db_service.init_db()  
         dp.include_router(router)
         await dp.start_polling(bot, ai_service=ai_service, db_service=db_service)
-    except BadRequestError:
-        print(f"❌ Ошибка авторизации GigaChat API: Неверный GIGACHAT_CREDENTIALS!") 
-        return   
+    except BadRequestError as e:
+        logger.exception(f"❌ Ошибка авторизации GigaChat API: Неверный GIGACHAT_CREDENTIALS! {e}")
     except ValueError as e: 
-        print(f"❌ Ошибка валидации токена: {e}")        
-    except TelegramUnauthorizedError:  
-        print("❌ Ошибка! Токен недействителен (401 Unauthorized) " \
-        "Проверьте токен в @BotFather")  
+        logger.exception(f"❌ Ошибка валидации токена: {e}")       
+    except TelegramUnauthorizedError as e: 
+        logger.exception(f"❌ Ошибка! Токен недействителен (401 Unauthorized) {e}") 
     except Exception as e:
-        print(f"❌ Произошла ошибка при запуске: {e}")
+        logger.exception(f"❌ Произошла ошибка при запуске: {e}")
 
 
 if __name__ == "__main__":

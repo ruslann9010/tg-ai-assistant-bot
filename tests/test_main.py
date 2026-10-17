@@ -12,8 +12,15 @@ def test_main_with_valid_token():
             assert main.BOT_TOKEN == test_token    
 
 
-def test_main_missing_token_exits():
+def test_main_missing_token_exits(caplog):
+     import logging
      with patch("os.getenv", return_value=None):
         with pytest.raises(SystemExit) as exc_info:
-            import main
-        assert "Токен" in str(exc_info.value) or "токен" in str(exc_info.value).lower()
+            from main import main
+            import asyncio
+            asyncio.run(main())
+     assert any(
+     "Токен" in record.message or "токен" in record.message
+     for record in caplog.records
+     if record.levelno == logging.CRITICAL
+    )
